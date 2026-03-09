@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Hannah!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@300;400;600&family=Space+Mono:wght@700&display=swap');
+
+        body {
+            margin: 0;
+            background-color: #050505;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone-container {
+            position: relative;
+            width: 100%;
+            max-width: 430px;
+            height: 100dvh;
+            max-height: 932px;
+            background: #000;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(236, 72, 153, 0.2);
+        }
+
+        @media (min-width: 431px) {
+            .phone-container {
+                height: 90vh;
+                border-radius: 40px;
+                border: 8px solid #1a1a1a;
+            }
+        }
+
+        .bg-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0.3;
+            /* Darker initially */
+            filter: blur(8px);
+            transition: opacity 1s ease, filter 1s ease;
+        }
+
+        .cursive {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        .timer-font {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0;
+            pointer-events: none;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .page.exit-up {
+            transform: translateY(-100px) scale(0.9);
+            opacity: 0;
+        }
+
+        .page.enter-down {
+            transform: translateY(100px) scale(1.1);
+            opacity: 0;
+        }
+
+        /* Glassmorphism for text container */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 35px 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            color: white;
+            width: 100%;
+            transform: translateY(0);
+            transition: transform 0.3s ease, opacity 0.5s ease;
+        }
+
+        /* Countdown Timer */
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .time-box {
+            background: rgba(236, 72, 153, 0.15);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 12px;
+            width: 70px;
+            height: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
+        }
+
+        .time-val {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fbcfe8;
+            line-height: 1;
+        }
+
+        .time-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #f9a8d4;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* Gift Box */
+        .gift-wrapper {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            display: none;
+        }
+
+        .gift-wrapper.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            display: block;
+        }
+
+        .gift-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: 20px auto;
+        }
+
+        .gift-container:hover {
+            transform: scale(1.1) translateY(-5px);
+        }
+
+        .gift-box {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            position: relative;
+            border-radius: 14px;
+            box-shadow: 0 15px 45px rgba(236, 72, 153, 0.5);
+        }
+
+        .gift-box::before {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 100%;
+            background: #fdf2f8;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .gift-box::after {
+            content: '';
+            position: absolute;
+            height: 26px;
+            width: 100%;
+            background: #fdf2f8;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .lid {
+            position: absolute;
+            width: 156px;
+            height: 38px;
+            background: linear-gradient(135deg, #db2777 0%, #9d174d 100%);
+            top: -19px;
+            left: -8px;
+            border-radius: 8px;
+            z-index: 2;
+            transition: 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Small Floating Hearts */
+        .heart-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+        }
+
+        .floating-heart {
+            position: absolute;
+            bottom: -50px;
+            color: rgba(236, 72, 153, 0.8);
+            animation: floatHeart infinite ease-in;
+            opacity: 0;
+            filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.5));
+        }
+
+        @keyframes floatHeart {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-120vh) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Pulse animation for buttons */
+        .btn-pulse {
+            animation: pulse-btn 2.5s infinite;
+        }
+
+        @keyframes pulse-btn {
+            0% {
+                box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(236, 72, 153, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+            }
+        }
+
+        /* Custom scrollbar for message */
+        .msg-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .msg-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 5px;
+        }
+
+        .msg-scroll::-webkit-scrollbar-thumb {
+            background: rgba(236, 72, 153, 0.4);
+            border-radius: 5px;
+        }
+
+        /* Video Controls Overlay */
+        .video-controls {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 30;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            flex-wrap: wrap;
+            padding: 0 10px;
+        }
+
+        .video-controls.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: rgba(236, 72, 153, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .main-btn {
+            background: rgba(236, 72, 153, 0.8);
+            border-color: rgba(244, 114, 182, 0.5);
+        }
+
+        .main-btn:hover {
+            background: rgba(219, 39, 119, 0.9);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone-container">
+        <!-- Background Video -->
+        <video autoplay muted loop playsinline class="bg-video" id="bgVideo">
+            <source src="hannahvi.mp4" type="video/mp4">
+        </video>
+
+        <!-- Floating Hearts Container -->
+        <div id="heartContainer" class="heart-container"></div>
+
+        <!-- Page 1: Countdown Timer & Surprise -->
+        <div id="page1" class="page active">
+            <div class="glass-panel text-center" id="panel1">
+                <div id="countdown-section">
+                    <h2 class="text-white text-3xl mb-8 font-semibold cursive tracking-wide drop-shadow-md">A special
+                        surprise unlocks in...</h2>
+
+                    <div class="countdown-container timer-font">
+                        <div class="time-box">
+                            <span class="time-val" id="cd-days">00</span>
+                            <span class="time-label">Days</span>
+                        </div>
+                        <div class="time-box">
+                            <span class="time-val" id="cd-hours">00</span>
+                            <span class="time-label">Hrs</span>
+                        </div>
+                        <div class="time-box">
+                            <span class="time-val" id="cd-minutes">00</span>
+                            <span class="time-label">Min</span>
+                        </div>
+                        <div class="time-box">
+                            <span class="time-val" id="cd-seconds">05</span>
+                            <span class="time-label">Sec</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gift-wrapper" id="surprise-section">
+                    <h2
+                        class="text-white text-4xl mb-6 font-semibold cursive animate-pulse tracking-wide drop-shadow-md">
+                        Click for a Surprise!</h2>
+                    <div class="gift-container mx-auto" onclick="goToPage2()">
+                        <div class="lid" id="giftLid"></div>
+                        <div class="gift-box"></div>
+                    </div>
+                    <p class="mt-6 text-pink-300 italic text-lg tracking-wider animate-bounce">Tap to open</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 2: Birthday Animation -->
+        <div id="page2" class="page enter-down">
+            <div class="glass-panel w-full" id="panel2">
+                <h1 class="cursive text-5xl md:text-6xl text-pink-300 drop-shadow-2xl mb-4 leading-tight">
+                    🎉 Happy Birthday <br>
+                    <span
+                        class="text-white font-bold text-6xl tracking-wide block mt-3 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]">Hannah</span>
+                    🎉
+                </h1>
+                <p class="text-white/90 text-xl font-light mb-10 tracking-wide mt-6">Let's celebrate your special day!
+                </p>
+                <button onclick="goToPage3()"
+                    class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-4 px-10 rounded-full shadow-[0_10px_25px_rgba(236,72,153,0.5)] transition-transform transform hover:scale-105 btn-pulse text-lg tracking-wide w-full">
+                    Read Message
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 3: Personal Message -->
+        <div id="page3" class="page enter-down">
+            <div class="glass-panel w-full text-left overflow-y-auto max-h-[85vh] msg-scroll pb-10" id="panel3">
+                <h2 class="cursive text-4xl text-pink-300 mb-6 text-center drop-shadow-md">Happy Birthday! 🎂🎉
+                    <br><span class="text-sm font-sans tracking-wide text-white/60">( check down watch video )</span>
+                </h2>
+
+                <div class="space-y-4 text-white/95 text-[15.5px] leading-[1.75] font-light">
+                    <p>I just want to say thank you for being such a beautiful part of my life for the last 4 years.
+                        These years with you have been full of memories, happiness, and special moments that I will
+                        always cherish.</p>
+
+                    <p>Your smile, your kindness, and your presence make everything brighter. I feel very lucky to have
+                        someone as wonderful as you in my life. Thank you for all the laughter, support, and love you
+                        have given during these <span class="text-pink-300 font-medium">4 beautiful years</span>.</p>
+
+                    <p>On your special day, I wish you endless happiness, success, and all the dreams you wish for. May
+                        your life always be filled with joy, love, and amazing moments.</p>
+
+                    <p class="font-medium text-pink-300 pt-2 text-lg drop-shadow-md">Happy Birthday once again, Hannah.
+                        You are truly special. ❤️</p>
+
+                    <p class="cursive text-4xl text-right text-white pt-6 drop-shadow-lg pb-4">With lots of love.</p>
+                </div>
+
+                <div class="mt-8 mb-2 w-full">
+                    <button onclick="goToPage4()"
+                        class="w-full bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-semibold py-4 rounded-full shadow-lg transition-all duration-300 btn-pulse tracking-widest text-sm uppercase">
+                        ▶ Watch Video
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 4: Video Selection Menu -->
+        <div id="page4" class="page enter-down">
+            <div class="glass-panel w-full" id="panel4">
+                <h2 class="cursive text-4xl text-pink-300 mb-4 text-center drop-shadow-md">Special Memories 🎬</h2>
+                <p class="text-white/80 text-center mb-8 font-light text-sm">Select a video to watch our beautiful
+                    moments together.</p>
+
+                <div class="space-y-4 w-full">
+                    <button onclick="playTargetVideo('hannahvi.mp4')"
+                        class="w-full bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-medium py-4 rounded-xl shadow-lg transition-all duration-300 tracking-wide text-md flex items-center justify-center gap-3">
+                        <span class="text-xl">🤍</span> Watch video 1
+                    </button>
+                    <button onclick="playTargetVideo('hannahvii.mp4')"
+                        class="w-full bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-medium py-4 rounded-xl shadow-lg transition-all duration-300 tracking-wide text-md flex items-center justify-center gap-3">
+                        <span class="text-xl">😂</span> Watch video 2
+                    </button>
+                    <button onclick="playTargetVideo('hannahviii.mp4')"
+                        class="w-full bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-medium py-4 rounded-xl shadow-lg transition-all duration-300 tracking-wide text-md flex items-center justify-center gap-3">
+                        <span class="text-xl">💝</span> Watch video 3
+                    </button>
+                </div>
+
+                <div class="mt-10 mb-2 w-full text-center">
+                    <button onclick="navigate(p4, p3)"
+                        class="text-white/70 hover:text-white transition-colors uppercase tracking-widest text-xs font-semibold">
+                        🔙 Back to Message
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 5: Video Player Fullscreen -->
+        <div id="page5" class="page enter-down" style="padding:0;">
+            <!-- Video controls -->
+            <div class="video-controls" id="vidControls">
+                <button onclick="stopAndGoBack()" class="control-btn">
+                    Back Space 🔙
+                </button>
+                <button onclick="restartVideo()" class="control-btn">
+                    Restart ◄
+                </button>
+                <button id="mainMuteToggle" onclick="toggleMainMute()" class="control-btn main-btn">
+                    Unmute 🔊
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const p1 = document.getElementById('page1');
+        const p2 = document.getElementById('page2');
+        const p3 = document.getElementById('page3');
+        const p4 = document.getElementById('page4');
+        const p5 = document.getElementById('page5');
+        const bgVideo = document.getElementById('bgVideo');
+        const vidControls = document.getElementById('vidControls');
+
+        // Simple Countdown Logic (5 Seconds for dramatic effect)
+        let count = 5;
+        const cdSeconds = document.getElementById('cd-seconds');
+        const cdSection = document.getElementById('countdown-section');
+        const surpriseSection = document.getElementById('surprise-section');
+
+        const timer = setInterval(() => {
+            count--;
+            cdSeconds.innerText = count < 10 ? '0' + count : count;
+
+            if (count <= 0) {
+                clearInterval(timer);
+                cdSection.style.opacity = '0';
+                setTimeout(() => {
+                    cdSection.style.display = 'none';
+                    surpriseSection.classList.add('show');
+                }, 500);
+            }
+        }, 1000);
+
+        function navigate(fromPage, toPage) {
+            fromPage.classList.remove('active');
+            fromPage.classList.add('exit-up');
+
+            setTimeout(() => {
+                fromPage.classList.remove('exit-up');
+                fromPage.classList.add('enter-down');
+            }, 800);
+
+            toPage.classList.remove('enter-down');
+            toPage.classList.add('active');
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#ec4899', '#fbcfe8', '#be185d']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#ec4899', '#fbcfe8', '#be185d']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        function goToPage2() {
+            // Unmute video attempt on interaction
+            bgVideo.play().catch(e => console.log("Video play error:", e));
+
+            // Animate lid
+            const lid = document.getElementById('giftLid');
+            lid.style.transform = 'translateY(-140px) rotate(25deg) scale(1.1)';
+            lid.style.opacity = '0';
+
+            setTimeout(() => {
+                navigate(p1, p2);
+                triggerConfetti();
+                createHearts();
+                // Dim for better text contrast
+                bgVideo.style.opacity = '0.4';
+
+                // Reset lid
+                setTimeout(() => {
+                    lid.style.transform = 'none';
+                    lid.style.opacity = '1';
+                }, 1000);
+            }, 600);
+        }
+
+        function goToPage3() {
+            navigate(p2, p3);
+            bgVideo.style.opacity = '0.25'; // Dim further for reading reading comfort
+        }
+
+        function goToPage4() {
+            navigate(p3, p4);
+            bgVideo.style.opacity = '0.35';
+        }
+
+        // Video Player Functions
+        function playTargetVideo(src) {
+            navigate(p4, p5);
+            document.getElementById('heartContainer').innerHTML = ''; // clear hearts if any
+
+            // Change video source and properties
+            if (!bgVideo.src.endsWith(src)) {
+                bgVideo.src = src;
+            }
+            bgVideo.currentTime = 0;
+            bgVideo.loop = false; // play once, or true if we want looping
+            bgVideo.muted = false; // explicitly unmute on selection
+            bgVideo.play().catch(e => console.log(e));
+
+            // Update UI
+            document.getElementById('mainMuteToggle').innerText = "Mute 🔇";
+            document.getElementById('mainMuteToggle').classList.remove('main-btn');
+
+            // Unblur and brighten video for Fullscreen Mode
+            bgVideo.style.opacity = '1';
+            bgVideo.style.filter = 'blur(0px)';
+
+            // Show video controls
+            setTimeout(() => {
+                vidControls.classList.add('active');
+            }, 800);
+
+            // Re-loop handler just in case they want it to loop
+            bgVideo.onended = function () {
+                bgVideo.play();
+            };
+        }
+
+        function stopAndGoBack() {
+            navigate(p5, p4);
+
+            // Re-blur and dim video
+            bgVideo.style.opacity = '0.35';
+            bgVideo.style.filter = 'blur(8px)';
+            bgVideo.muted = true;
+            vidControls.classList.remove('active');
+
+            // Optional: set it back to loop and main video
+            bgVideo.loop = true;
+            if (!bgVideo.src.endsWith('hannahvi.mp4')) {
+                bgVideo.src = 'hannahvi.mp4';
+            }
+            bgVideo.play();
+        }
+
+        function restartVideo() {
+            bgVideo.currentTime = 0;
+            bgVideo.play();
+        }
+
+        function toggleMainMute() {
+            bgVideo.muted = !bgVideo.muted;
+            const btn = document.getElementById('mainMuteToggle');
+            if (bgVideo.muted) {
+                btn.innerText = "Unmute 🔊";
+                btn.classList.add('main-btn');
+            } else {
+                btn.innerText = "Mute 🔇";
+                btn.classList.remove('main-btn');
+            }
+        }
+
+        // Floating Hearts Logic
+        const heartContainer = document.getElementById('heartContainer');
+        const heartIcons = ['❤️', '💖', '💕', '💗', '✨'];
+        let heartInterval;
+
+        function createHearts() {
+            heartContainer.innerHTML = ''; // clear old
+            let count = 0;
+            // Generate standard small hearts
+            heartInterval = setInterval(() => {
+                if (count > 40) { // Limit total hearts that spawn
+                    clearInterval(heartInterval);
+                }
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerText = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+                heart.style.left = Math.random() * 90 + 5 + '%';
+                heart.style.fontSize = (Math.random() * 15 + 10) + 'px'; // small hearts 10-25px
+                heart.style.animationDuration = (Math.random() * 4 + 7) + 's'; // 7-11 seconds float time
+                heartContainer.appendChild(heart);
+
+                // Cleanup heart after it finishes floating
+                setTimeout(() => {
+                    if (heart.parentNode) heart.parentNode.removeChild(heart);
+                }, 11000);
+                count++;
+            }, 300); // Spawn one every 300ms
+        }
+    </script>
+</body>
+
+</html>
